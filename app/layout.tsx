@@ -39,10 +39,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={`${inter.variable} ${tajawal.variable}`}>
+    <html lang="ar" dir="rtl" className={`${inter.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-bg-page text-text-dark antialiased">
         <LanguageProvider>
-          {children}
+          <TopBar />
+          <div className="w-[95%] max-w-7xl mx-auto px-4">
+            <MainNavbar />
+          </div>
+          <main className="flex-1 w-full">{children}</main>
+          <Footer />
+          <MobileBottomNav />
         </LanguageProvider>
       </body>
     </html>

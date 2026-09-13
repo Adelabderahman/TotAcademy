@@ -1,0 +1,6 @@
+{
+  "name": "TOT Academy - Comprehensive Platform",
+  "description": "Comprehensive training of trainers platform featuring classes, educational paths, events, specializations, trainers directory, and magazine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

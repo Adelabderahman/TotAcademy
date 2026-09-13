@@ -16,13 +16,23 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
+try {
+  const activeConfig = firebaseConfig.apiKey
+    ? firebaseConfig
+    : {
+        apiKey: 'AIzaSyMockKeyForAppletEnvironment12345',
+        authDomain: 'tot-academy.firebaseapp.com',
+        projectId: 'tot-academy-mock',
+        storageBucket: 'tot-academy.appspot.com',
+        messagingSenderId: '100000000000',
+        appId: '1:100000000000:web:mock1234567890',
+      };
 
-auth = getAuth(app);
-db = getFirestore(app);
+  app = !getApps().length ? initializeApp(activeConfig) : getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (err) {
+  console.warn('Firebase initialization note:', err);
+}
 
 export { app, auth, db };

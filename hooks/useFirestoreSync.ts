@@ -9,12 +9,29 @@ export function useFirestoreSync<T>(
   documentId: string,
   initialData: T
 ) {
-  const [data, setData] = useState<T>(initialData);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [data, setData] = useState<T>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(`cms_${collectionName}_${documentId}`);
+        if (cached) return JSON.parse(cached);
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return initialData;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    return Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
+    if (!db || !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      if (isMounted) setIsLoading(false);
+      return;
+    }
 
     try {
       const docRef = doc(db, collectionName, documentId);
@@ -26,7 +43,15 @@ export function useFirestoreSync<T>(
           if (!isMounted) return;
 
           if (snapshot.exists()) {
-            setData(snapshot.data() as T);
+            const remoteData = snapshot.data() as T;
+            setData(remoteData);
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(`cms_${collectionName}_${documentId}`, JSON.stringify(remoteData));
+              } catch {
+                // ignore
+              }
+            }
           } else {
             // Seed the document on first run
             setDoc(docRef, initialData as any, { merge: true }).catch((err) => {
@@ -58,11 +83,23 @@ export function useFirestoreSync<T>(
   // Mutation function to commit live edits back to Firestore
   const mutate = useCallback(
     async (updatedFields: Partial<T>) => {
-      const docRef = doc(db, collectionName, documentId);
       const updatedState = { ...data, ...updatedFields };
       setData(updatedState);
 
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`cms_${collectionName}_${documentId}`, JSON.stringify(updatedState));
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!db || !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        return;
+      }
+
       try {
+        const docRef = doc(db, collectionName, documentId);
         await setDoc(docRef, updatedState as any, { merge: true });
       } catch (err: any) {
         console.error('Failed to sync changes with Firestore:', err);

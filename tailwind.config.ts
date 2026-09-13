@@ -3,7 +3,9 @@ import type { Config } from 'tailwindcss';
 const config: Config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}", // تأكد من وجود هذا السطر
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./context/**/*.{js,ts,jsx,tsx,mdx}",
+    "./hooks/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -36,10 +38,15 @@ const config: Config = {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(-6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'marquee-rtl': 'scrollMarqueeRTL 40s linear infinite',
         'marquee-ltr': 'scrollMarqueeLTR 40s linear infinite',
+        fadeIn: 'fadeIn 0.2s ease-out forwards',
       },
     },
   },
