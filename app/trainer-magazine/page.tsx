@@ -294,6 +294,9 @@ export default function TrainerMagazinePage() {
         </div>
 
         <SectionCardsSlider
+          slides={STRATEGIC_SLIDES}
+          activeSlideSlug={activeStrategySec}
+          onSelectSlide={setActiveStrategySec}
           cards={strategySlide.cards}
           layout={strategySlide.layout}
           sectionSlug={activeStrategySec}
@@ -333,6 +336,9 @@ export default function TrainerMagazinePage() {
         </div>
 
         <SectionCardsSlider
+          slides={PRACTICE_SLIDES}
+          activeSlideSlug={activePracticeSec}
+          onSelectSlide={setActivePracticeSec}
           cards={practiceSlide.cards}
           layout={practiceSlide.layout}
           sectionSlug={activePracticeSec}
@@ -372,6 +378,9 @@ export default function TrainerMagazinePage() {
         </div>
 
         <SectionCardsSlider
+          slides={INNOVATION_SLIDES}
+          activeSlideSlug={activeInnovationSec}
+          onSelectSlide={setActiveInnovationSec}
           cards={innovationSlide.cards}
           layout={innovationSlide.layout}
           sectionSlug={activeInnovationSec}
@@ -411,6 +420,9 @@ export default function TrainerMagazinePage() {
         </div>
 
         <SectionCardsSlider
+          slides={COMMUNITY_SLIDES}
+          activeSlideSlug={activeCommunitySec}
+          onSelectSlide={setActiveCommunitySec}
           cards={communitySlide.cards}
           layout={communitySlide.layout}
           sectionSlug={activeCommunitySec}
@@ -433,20 +445,6 @@ export default function TrainerMagazinePage() {
           <div className="issues-kicker">{t.issues_kicker}</div>
           <h2 className="issues-title">{t.issues_title}</h2>
           <p className="issues-desc">{t.issues_desc}</p>
-        </div>
-
-        {/* Mobile Swipe Prompt for Archive */}
-        <div className="mag-slider-mobile-bar" style={{ justifyContent: 'center', marginBottom: 14 }}>
-          <div className="mag-swipe-hint-pill">
-            <Compass size={13} className="text-sky-400 animate-spin-slow" />
-            <span>
-              {lang === 'ar'
-                ? 'اسحب أفقياً لتصفح أعداد المجلة'
-                : lang === 'fr'
-                ? 'Glissez pour feuilleter les numéros'
-                : 'Swipe horizontally to browse magazine issues'}
-            </span>
-          </div>
         </div>
 
         <div className="issues-grid">

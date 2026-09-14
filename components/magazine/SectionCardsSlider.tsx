@@ -1,14 +1,18 @@
 'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { ArticleCardData } from '@/lib/magazine-data';
+import { ArticleCardData, EditorialSlide, MAG_SECTIONS } from '@/lib/magazine-data';
 import { MagazineFlipCard } from './MagazineFlipCard';
-import { ChevronLeft, ChevronRight, Compass, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 
 interface SectionCardsSliderProps {
-  cards: ArticleCardData[];
-  layout: string;
-  sectionSlug: string;
+  slides?: EditorialSlide[];
+  activeSlideSlug?: string;
+  onSelectSlide?: (slug: string) => void;
+  // Fallbacks
+  cards?: ArticleCardData[];
+  layout?: string;
+  sectionSlug?: string;
   lang: 'ar' | 'en' | 'fr';
   isRtl: boolean;
   t: Record<string, string>;
@@ -19,9 +23,12 @@ interface SectionCardsSliderProps {
 }
 
 export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
+  slides,
+  activeSlideSlug,
+  onSelectSlide,
   cards,
-  layout,
-  sectionSlug,
+  layout = 'radar',
+  sectionSlug = 'slide',
   lang,
   isRtl,
   t,
@@ -30,166 +37,275 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
   onOpenShare,
   onCopyCitation,
 }) => {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Normalize slides
+  const effectiveSlides: EditorialSlide[] = React.useMemo(() => {
+    if (slides && slides.length > 0) return slides;
+    if (cards && cards.length > 0) {
+      return [
+        {
+          slug: sectionSlug,
+          layout: layout,
+          accent: '#f59e0b',
+          cards: cards,
+        },
+      ];
+    }
+    return [];
+  }, [slides, cards, layout, sectionSlug]);
 
-  // Swipe prompt strings
-  const sliderText = {
-    ar: {
-      swipe_hint: 'اسحب أفقياً لتصفح البطاقات',
-      prev: 'السابق',
-      next: 'التالي',
-      counter: '{current} من {total}',
-    },
-    en: {
-      swipe_hint: 'Swipe horizontally to browse cards',
-      prev: 'Previous',
-      next: 'Next',
-      counter: '{current} of {total}',
-    },
-    fr: {
-      swipe_hint: 'Glissez horizontalement pour faire défiler',
-      prev: 'Précédent',
-      next: 'Suivant',
-      counter: '{current} sur {total}',
-    },
-  }[lang] || {
-    swipe_hint: 'اسحب أفقياً لتصفح البطاقات',
-    prev: 'السابق',
-    next: 'التالي',
-    counter: '{current} من {total}',
-  };
+  // Active slide calculation for desktop
+  const activeIdx = effectiveSlides.findIndex((s) => s.slug === activeSlideSlug);
+  const currentSlide = effectiveSlides[activeIdx >= 0 ? activeIdx : 0] || effectiveSlides[0];
 
-  // Listen to scroll to update active dot on mobile swipe
-  const handleScroll = useCallback(() => {
-    if (!trackRef.current) return;
-    const container = trackRef.current;
+  const mobileTrackRef = useRef<HTMLDivElement>(null);
+  const [activeMobileIdx, setActiveMobileIdx] = useState(0);
+
+  // Sync mobile index with activeSlideSlug prop
+  useEffect(() => {
+    if (!activeSlideSlug) return;
+    const idx = effectiveSlides.findIndex((s) => s.slug === activeSlideSlug);
+    if (idx >= 0 && idx !== activeMobileIdx) {
+      setActiveMobileIdx(idx);
+      if (mobileTrackRef.current) {
+        const container = mobileTrackRef.current;
+        const target = container.children[idx] as HTMLElement | undefined;
+        if (target) {
+          container.scrollTo({
+            left: isRtl
+              ? target.offsetLeft - (container.clientWidth - target.clientWidth)
+              : target.offsetLeft,
+            behavior: 'smooth',
+          });
+        }
+      }
+    }
+  }, [activeSlideSlug, effectiveSlides, isRtl]);
+
+  // Handle mobile swipe/scroll detection to sync state
+  const handleMobileScroll = useCallback(() => {
+    if (!mobileTrackRef.current) return;
+    const container = mobileTrackRef.current;
     const scrollLeft = Math.abs(container.scrollLeft);
     const itemWidth = container.firstElementChild
-      ? (container.firstElementChild as HTMLElement).clientWidth + 16
-      : 300;
-    const newIndex = Math.round(scrollLeft / itemWidth);
-    if (newIndex >= 0 && newIndex < cards.length) {
-      setActiveIndex(newIndex);
+      ? (container.firstElementChild as HTMLElement).clientWidth + 14
+      : 320;
+    const newIdx = Math.round(scrollLeft / itemWidth);
+    if (newIdx >= 0 && newIdx < effectiveSlides.length && newIdx !== activeMobileIdx) {
+      setActiveMobileIdx(newIdx);
+      if (onSelectSlide && effectiveSlides[newIdx]) {
+        onSelectSlide(effectiveSlides[newIdx].slug);
+      }
     }
-  }, [cards.length]);
+  }, [effectiveSlides, activeMobileIdx, onSelectSlide]);
 
   useEffect(() => {
-    const track = trackRef.current;
+    const track = mobileTrackRef.current;
     if (!track) return;
-    track.addEventListener('scroll', handleScroll, { passive: true });
-    return () => track.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    track.addEventListener('scroll', handleMobileScroll, { passive: true });
+    return () => track.removeEventListener('scroll', handleMobileScroll);
+  }, [handleMobileScroll]);
 
-  // Reset to first slide on section change
-  useEffect(() => {
-    setActiveIndex(0);
-    if (trackRef.current) {
-      trackRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-    }
-  }, [sectionSlug]);
-
-  const scrollToCard = (index: number) => {
-    if (!trackRef.current) return;
-    const container = trackRef.current;
-    const children = container.children;
-    if (children[index]) {
-      const child = children[index] as HTMLElement;
+  const scrollToSlide = (idx: number) => {
+    if (!mobileTrackRef.current) return;
+    const container = mobileTrackRef.current;
+    const target = container.children[idx] as HTMLElement | undefined;
+    if (target) {
       container.scrollTo({
-        left: child.offsetLeft - (isRtl ? container.clientWidth - child.clientWidth : 0),
+        left: isRtl
+          ? target.offsetLeft - (container.clientWidth - target.clientWidth)
+          : target.offsetLeft,
         behavior: 'smooth',
       });
-      setActiveIndex(index);
+      setActiveMobileIdx(idx);
+      if (onSelectSlide && effectiveSlides[idx]) {
+        onSelectSlide(effectiveSlides[idx].slug);
+      }
     }
   };
 
   const handlePrev = () => {
-    const nextIdx = Math.max(0, activeIndex - 1);
-    scrollToCard(nextIdx);
+    const nextIdx = Math.max(0, activeMobileIdx - 1);
+    scrollToSlide(nextIdx);
   };
 
   const handleNext = () => {
-    const nextIdx = Math.min(cards.length - 1, activeIndex + 1);
-    scrollToCard(nextIdx);
+    const nextIdx = Math.min(effectiveSlides.length - 1, activeMobileIdx + 1);
+    scrollToSlide(nextIdx);
   };
+
+  if (effectiveSlides.length === 0) return null;
 
   return (
     <div className="mag-carousel-outer">
-      {/* Mobile Swipe Top Bar with Controls */}
-      <div className="mag-slider-mobile-bar">
-        <div className="mag-swipe-hint-pill">
-          <Compass size={13} className="text-amber-400 animate-spin-slow" />
-          <span>{sliderText.swipe_hint}</span>
-        </div>
-
-        <div className="mag-slider-actions">
-          <button
-            type="button"
-            className="mag-slider-nav-btn"
-            onClick={isRtl ? handleNext : handlePrev}
-            disabled={isRtl ? activeIndex === cards.length - 1 : activeIndex === 0}
-            aria-label={sliderText.prev}
-          >
-            {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
-
-          <span className="mag-slider-counter-badge">
-            {sliderText.counter
-              .replace('{current}', String(activeIndex + 1))
-              .replace('{total}', String(cards.length))}
-          </span>
-
-          <button
-            type="button"
-            className="mag-slider-nav-btn"
-            onClick={isRtl ? handlePrev : handleNext}
-            disabled={isRtl ? activeIndex === 0 : activeIndex === cards.length - 1}
-            aria-label={sliderText.next}
-          >
-            {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-          </button>
+      {/* ========================================================================= */}
+      {/* DESKTOP VIEW: Renders active slide in full 12-column grid layout          */}
+      {/* ========================================================================= */}
+      <div className="hidden md:block">
+        <div
+          className={`mag-desktop-slide-grid ${currentSlide.layout}-grid`}
+          dir={isRtl ? 'rtl' : 'ltr'}
+        >
+          {currentSlide.cards.map((card, idx) => (
+            <MagazineFlipCard
+              key={`${card.title.en || card.title.ar}-${idx}`}
+              card={card}
+              index={idx}
+              total={currentSlide.cards.length}
+              lang={lang}
+              isRtl={isRtl}
+              t={t}
+              onOpenArticle={onOpenArticle}
+              onOpenVideo={onOpenVideo}
+              onOpenShare={onOpenShare}
+              onCopyCitation={onCopyCitation}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Cards Track (Desktop Grid / Mobile Swipe Track) */}
-      <div
-        ref={trackRef}
-        className={`mag-swipe-track ${layout}-grid`}
-        dir={isRtl ? 'rtl' : 'ltr'}
-      >
-        {cards.map((card, idx) => (
-          <MagazineFlipCard
-            key={`${card.title.en || card.title.ar}-${idx}`}
-            card={card}
-            index={idx}
-            total={cards.length}
-            lang={lang}
-            isRtl={isRtl}
-            t={t}
-            onOpenArticle={onOpenArticle}
-            onOpenVideo={onOpenVideo}
-            onOpenShare={onOpenShare}
-            onCopyCitation={onCopyCitation}
-          />
-        ))}
-      </div>
+      {/* ========================================================================= */}
+      {/* MOBILE VIEW: Horizontal swipe track of SLIDE CONTAINERS (حاويات المقالات) */}
+      {/* ========================================================================= */}
+      <div className="block md:hidden">
+        {/* Navigation Bar without swipe hint */}
+        {effectiveSlides.length > 1 && (
+          <div className="mag-slider-mobile-bar" style={{ justifyContent: 'space-between', marginBottom: 10 }}>
+            <span className="mag-slider-counter-badge" style={{ fontSize: '11px' }}>
+              {lang === 'ar'
+                ? `حاوية ${activeMobileIdx + 1} من ${effectiveSlides.length}`
+                : lang === 'fr'
+                ? `Volet ${activeMobileIdx + 1} sur ${effectiveSlides.length}`
+                : `Slide ${activeMobileIdx + 1} of ${effectiveSlides.length}`}
+            </span>
 
-      {/* Slider Pagination Dots (Active on mobile swipe, interactive) */}
-      {cards.length > 1 && (
-        <div className="mag-slider-dots-container">
-          <div className="mag-slider-dots">
-            {cards.map((_, idx) => (
+            <div className="mag-slider-actions">
               <button
-                key={idx}
                 type="button"
-                className={`mag-slider-dot ${activeIndex === idx ? 'active' : ''}`}
-                onClick={() => scrollToCard(idx)}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
+                className="mag-slider-nav-btn"
+                onClick={isRtl ? handleNext : handlePrev}
+                disabled={isRtl ? activeMobileIdx === effectiveSlides.length - 1 : activeMobileIdx === 0}
+                aria-label="Previous"
+              >
+                {isRtl ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+              </button>
+
+              <button
+                type="button"
+                className="mag-slider-nav-btn"
+                onClick={isRtl ? handlePrev : handleNext}
+                disabled={isRtl ? activeMobileIdx === 0 : activeMobileIdx === effectiveSlides.length - 1}
+                aria-label="Next"
+              >
+                {isRtl ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+              </button>
+            </div>
           </div>
+        )}
+
+        {/* Slide Containers Track */}
+        <div
+          ref={mobileTrackRef}
+          className="mag-slides-swipe-track"
+          dir={isRtl ? 'rtl' : 'ltr'}
+        >
+          {effectiveSlides.map((slide, slideIdx) => {
+            const secMeta = MAG_SECTIONS.find((s) => s.slug === slide.slug);
+            const slideTitle = secMeta ? secMeta.name[lang] || secMeta.name.ar : slide.slug;
+            const countLabel =
+              lang === 'ar'
+                ? `${slide.cards.length} مقالات وفيديوهات`
+                : lang === 'fr'
+                ? `${slide.cards.length} contenus`
+                : `${slide.cards.length} items`;
+
+            const hasFeature = slide.cards.length > 1 && slide.cards[0].kind === 'feature';
+            const topFeatureCard = hasFeature ? slide.cards[0] : null;
+            const restCards = hasFeature ? slide.cards.slice(1) : slide.cards;
+
+            return (
+              <div
+                key={slide.slug}
+                id={`mobile-slide-${slide.slug}`}
+                className="mag-slide-container-card"
+              >
+                {/* Container Header */}
+                <div className="mag-slide-container-head">
+                  <span
+                    className="mag-slide-badge-title"
+                    style={{
+                      borderColor: `${slide.accent}44`,
+                      color: slide.accent,
+                      background: `${slide.accent}15`,
+                    }}
+                  >
+                    <Layers size={12} />
+                    <span>{slideTitle}</span>
+                  </span>
+                  <span className="mag-slide-item-count">{countLabel}</span>
+                </div>
+
+                {/* Top Feature Card (if exists) */}
+                {topFeatureCard && (
+                  <div className="mag-slide-feature-slot">
+                    <MagazineFlipCard
+                      card={topFeatureCard}
+                      index={0}
+                      total={slide.cards.length}
+                      lang={lang}
+                      isRtl={isRtl}
+                      t={t}
+                      onOpenArticle={onOpenArticle}
+                      onOpenVideo={onOpenVideo}
+                      onOpenShare={onOpenShare}
+                      onCopyCitation={onCopyCitation}
+                      isCompact
+                    />
+                  </div>
+                )}
+
+                {/* Compact 2-column Grid for Cards */}
+                {restCards.length > 0 && (
+                  <div className="mag-slide-compact-grid">
+                    {restCards.map((card, rIdx) => (
+                      <MagazineFlipCard
+                        key={`${card.title.en || card.title.ar}-${rIdx}`}
+                        card={card}
+                        index={hasFeature ? rIdx + 1 : rIdx}
+                        total={slide.cards.length}
+                        lang={lang}
+                        isRtl={isRtl}
+                        t={t}
+                        onOpenArticle={onOpenArticle}
+                        onOpenVideo={onOpenVideo}
+                        onOpenShare={onOpenShare}
+                        onCopyCitation={onCopyCitation}
+                        isCompact
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Slide Pagination Dots */}
+        {effectiveSlides.length > 1 && (
+          <div className="mag-slider-dots-container" style={{ marginTop: '10px' }}>
+            <div className="mag-slider-dots">
+              {effectiveSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`mag-slider-dot ${activeMobileIdx === idx ? 'active' : ''}`}
+                  onClick={() => scrollToSlide(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

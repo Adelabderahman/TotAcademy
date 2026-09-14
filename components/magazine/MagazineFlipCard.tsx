@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArticleCardData, VideoInfo, ARTICLE_CONTENT, PRACTICE_UI, LocalizedString } from '@/lib/magazine-data';
 import {
   RotateCw,
@@ -27,6 +27,7 @@ interface MagazineFlipCardProps {
   onOpenVideo: (video: { url: string; title: string; speaker: string; duration: string }) => void;
   onOpenShare: (card: ArticleCardData) => void;
   onCopyCitation: (title: string) => void;
+  isCompact?: boolean;
 }
 
 export const MagazineFlipCard: React.FC<MagazineFlipCardProps> = ({
@@ -40,8 +41,28 @@ export const MagazineFlipCard: React.FC<MagazineFlipCardProps> = ({
   onOpenVideo,
   onOpenShare,
   onCopyCitation,
+  isCompact = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
+
+  // Close back to front if clicking outside in the background
+  useEffect(() => {
+    if (!isFlipped) return;
+
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        setIsFlipped(false);
+      }
+    };
+
+    document.addEventListener('click', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [isFlipped]);
 
   const isFeature = card.kind === 'feature' || (index === 0 && total <= 3);
   const colClass = isFeature ? 'feature-col' : total >= 4 ? 'col-4' : 'col-6';
@@ -151,6 +172,11 @@ export const MagazineFlipCard: React.FC<MagazineFlipCardProps> = ({
     };
   })();
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Clicking anywhere on the card flips it!
+    setIsFlipped((prev) => !prev);
+  };
+
   const handleToggleFlip = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsFlipped((prev) => !prev);
@@ -158,7 +184,9 @@ export const MagazineFlipCard: React.FC<MagazineFlipCardProps> = ({
 
   return (
     <article
-      className={`mag-flip-container ${colClass} ${isFlipped ? 'is-flipped' : ''}`}
+      ref={cardRef}
+      onClick={handleCardClick}
+      className={`mag-flip-container ${colClass} ${isCompact ? 'mag-card-compact' : ''} ${isFlipped ? 'is-flipped' : ''}`}
       id={`flip-card-${index}`}
     >
       <div className="mag-flip-inner">
@@ -377,7 +405,7 @@ export const MagazineFlipCard: React.FC<MagazineFlipCardProps> = ({
                 }}
               >
                 <BookOpen size={14} />
-                <span>{uiTexts.view_full}</span>
+                <span className="mag-btn-view-full-text">{uiTexts.view_full}</span>
               </button>
             )}
 
