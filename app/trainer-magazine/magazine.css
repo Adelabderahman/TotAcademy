@@ -1926,216 +1926,643 @@
 }
 
 /* =========================================================
-   MOBILE SLIDE CONTAINERS SWIPE TRACK & CONTAINER CARDS
+   MOBILE SLIDER, SLIDE BAR, 3D FLIP CARDS & 18 GEOMETRIC LAYOUTS
+   Exact 100% replica of reference design for mobile screens
    ========================================================= */
 @media (max-width: 768px) {
-  .mag-slides-swipe-track {
+  /* 1. Mobile Slide Bar */
+  .strategy-slide-bar {
     display: flex !important;
-    overflow-x: auto !important;
-    scroll-snap-type: x mandatory !important;
-    scroll-behavior: smooth !important;
-    gap: 12px !important;
-    padding: 4px 4px 14px !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .mag-slides-swipe-track::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .mag-slide-container-card {
-    flex: 0 0 88% !important;
-    max-width: 380px !important;
-    min-width: 270px !important;
-    scroll-snap-align: center !important;
-    background: rgba(15, 23, 42, 0.72) !important;
-    backdrop-filter: blur(14px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 18px !important;
-    padding: 12px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-  }
-
-  .mag-slide-container-head {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding-bottom: 8px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-  }
-
-  .mag-slide-badge-title {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    font-size: 11.5px !important;
-    font-weight: 800 !important;
-    padding: 3px 10px !important;
-    border-radius: 9999px !important;
-    border: 1px solid transparent;
-  }
-
-  .mag-slide-item-count {
-    font-size: 10.5px !important;
-    color: #94a3b8 !important;
-    font-weight: 600 !important;
-  }
-
-  .mag-slide-feature-slot {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .mag-slide-feature-slot .mag-flip-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    flex: none !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Distributed secondary micro-cards */
-  .mag-slide-items-list {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .mag-slide-item-row {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    background: rgba(255, 255, 255, 0.035) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    width: min(320px, calc(100vw - 28px)) !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    margin: 0 auto 8px !important;
+    padding: 6px 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
     border-radius: 12px !important;
-    padding: 8px 10px !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    width: 100% !important;
+    background: rgba(255, 255, 255, 0.09) !important;
+    backdrop-filter: blur(10px) !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     box-sizing: border-box !important;
   }
 
-  .mag-slide-item-row:hover,
-  .mag-slide-item-row:active {
-    background: rgba(255, 255, 255, 0.07) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+  .strategy-slide-title-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-width: 0 !important;
   }
 
-  .mag-slide-item-thumb-wrap {
-    position: relative !important;
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    background: #0f172a !important;
-    flex-shrink: 0 !important;
-  }
-
-  .mag-slide-item-thumb {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    display: block !important;
-  }
-
-  .mag-slide-item-play-overlay {
-    position: absolute !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.45) !important;
+  .strategy-slide-index {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 27px !important;
+    height: 27px !important;
+    flex: 0 0 27px !important;
+    border-radius: 9px !important;
+    font-size: 0.58rem !important;
+    font-weight: 900 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
   }
 
-  .mag-slide-item-info {
-    flex: 1 !important;
-    min-width: 0 !important;
+  .strategy-slide-title {
+    margin: 0 !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
     overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: #fff !important;
   }
 
-  .mag-slide-item-meta {
+  .strategy-controls {
+    display: flex !important;
+    gap: 6px !important;
+  }
+
+  .strategy-arrow {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    margin-bottom: 2px !important;
+    justify-content: center !important;
+    width: 29px !important;
+    height: 29px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 9px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+    font-size: 0.88rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    line-height: 1 !important;
   }
 
-  .mag-slide-item-tag {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 3px !important;
-    font-size: 8.5px !important;
-    font-weight: 800 !important;
-    padding: 1px 5px !important;
-    border-radius: 4px !important;
+  .strategy-arrow:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
   }
 
-  .mag-slide-item-tag.article {
-    background: rgba(245, 158, 11, 0.15) !important;
-    color: #fbbf24 !important;
+  /* 2. Mobile Slider & Track */
+  .strategy-slider {
+    width: min(320px, calc(100vw - 28px)) !important;
+    height: 400px !important;
+    margin: 0 auto !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    scroll-behavior: smooth !important;
+    overscroll-behavior-inline: contain !important;
+    scrollbar-width: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.62) !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 16px 34px rgba(21, 54, 91, 0.11) !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
-  .mag-slide-item-tag.video {
-    background: rgba(239, 68, 68, 0.18) !important;
-    color: #f87171 !important;
+  .strategy-slider::-webkit-scrollbar {
+    display: none !important;
   }
 
-  .mag-slide-item-sub {
-    font-size: 9.5px !important;
-    color: #94a3b8 !important;
+  .strategy-track {
+    display: flex !important;
+    gap: 0 !important;
+    width: max-content !important;
+    height: 400px !important;
+    box-sizing: border-box !important;
+  }
+
+  .strategy-slide {
+    width: min(320px, calc(100vw - 28px)) !important;
+    min-width: min(320px, calc(100vw - 28px)) !important;
+    max-width: min(320px, calc(100vw - 28px)) !important;
+    height: 400px !important;
+    flex: 0 0 min(320px, calc(100vw - 28px)) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    scroll-snap-align: start !important;
+    box-sizing: border-box !important;
+  }
+
+  .strategy-card-grid {
+    display: grid !important;
+    width: 100% !important;
+    height: 400px !important;
+    box-sizing: border-box !important;
+    padding: 4px !important;
+  }
+
+  /* 3. 18 Layout Grids on Mobile */
+  /* Radar: 1 wide feature on top + 4 square cards (2x2) */
+  .strategy-card-grid.layout-radar {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 118px 133px 133px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-radar .article-card.feature {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    height: 118px !important;
+  }
+  .strategy-card-grid.layout-radar .article-card:not(.feature) {
+    width: 100% !important;
+    height: 133px !important;
+  }
+
+  /* Cover: 1 full-height cover story */
+  .strategy-card-grid.layout-cover {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-cover .article-card {
+    width: 100% !important;
+    height: 390px !important;
+  }
+
+  /* Interviews: 1 tall feature on left/start + 2 stacked cards on right/end */
+  .strategy-card-grid.layout-interviews {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr) !important;
+    grid-template-rows: 194px 194px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-interviews .article-card:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .strategy-card-grid.layout-interviews .article-card:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .strategy-card-grid.layout-interviews .article-card:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Global: 6 cards in 2 columns x 3 rows */
+  .strategy-card-grid.layout-global {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, 126px) !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    align-content: center !important;
+  }
+  .strategy-card-grid.layout-global .article-card {
+    width: 100% !important;
+    height: 126px !important;
+  }
+
+  /* Lab & Debate: 1 feature on top + 4 cards below in 2x2 */
+  .strategy-card-grid.layout-lab,
+  .strategy-card-grid.layout-debate,
+  .strategy-card-grid.layout-circuit,
+  .strategy-card-grid.layout-backstage {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 110px 136px 136px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-lab .article-card.feature,
+  .strategy-card-grid.layout-debate .article-card.feature,
+  .strategy-card-grid.layout-circuit .article-card.feature,
+  .strategy-card-grid.layout-backstage .article-card.feature,
+  .strategy-card-grid.layout-lab .article-card:nth-child(1),
+  .strategy-card-grid.layout-debate .article-card:nth-child(1),
+  .strategy-card-grid.layout-circuit .article-card:nth-child(1),
+  .strategy-card-grid.layout-backstage .article-card:nth-child(1) {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 110px !important;
+  }
+  .strategy-card-grid.layout-lab .article-card:not(:nth-child(1)),
+  .strategy-card-grid.layout-debate .article-card:not(:nth-child(1)),
+  .strategy-card-grid.layout-circuit .article-card:not(:nth-child(1)),
+  .strategy-card-grid.layout-backstage .article-card:not(:nth-child(1)) {
+    width: 100% !important;
+    height: 136px !important;
+  }
+
+  /* Cases & Venture: 1 tall feature on left + 3 stacked cards on right */
+  .strategy-card-grid.layout-cases,
+  .strategy-card-grid.layout-venture {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr) !important;
+    grid-template-rows: repeat(3, 128px) !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-cases .article-card:nth-child(1),
+  .strategy-card-grid.layout-venture .article-card:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .strategy-card-grid.layout-cases .article-card:not(:nth-child(1)),
+  .strategy-card-grid.layout-venture .article-card:not(:nth-child(1)) {
+    grid-column: 2 !important;
+    width: 100% !important;
+    height: 128px !important;
+  }
+
+  /* Shelf: 1 feature on top + 2 side-by-side cards below */
+  .strategy-card-grid.layout-shelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 145px 240px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-shelf .article-card.feature,
+  .strategy-card-grid.layout-shelf .article-card:nth-child(1) {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 145px !important;
+  }
+  .strategy-card-grid.layout-shelf .article-card:not(:nth-child(1)) {
+    width: 100% !important;
+    height: 240px !important;
+  }
+
+  /* Clinic, Charter, Calendar, Capsule: 1 tall feature on left + 2 stacked cards on right */
+  .strategy-card-grid.layout-clinic,
+  .strategy-card-grid.layout-charter,
+  .strategy-card-grid.layout-calendar,
+  .strategy-card-grid.layout-capsule {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.95fr) !important;
+    grid-template-rows: 194px 194px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-clinic .article-card:nth-child(1),
+  .strategy-card-grid.layout-charter .article-card:nth-child(1),
+  .strategy-card-grid.layout-calendar .article-card:nth-child(1),
+  .strategy-card-grid.layout-capsule .article-card:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .strategy-card-grid.layout-clinic .article-card:nth-child(2),
+  .strategy-card-grid.layout-charter .article-card:nth-child(2),
+  .strategy-card-grid.layout-calendar .article-card:nth-child(2),
+  .strategy-card-grid.layout-capsule .article-card:nth-child(2) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .strategy-card-grid.layout-clinic .article-card:nth-child(3),
+  .strategy-card-grid.layout-charter .article-card:nth-child(3),
+  .strategy-card-grid.layout-calendar .article-card:nth-child(3),
+  .strategy-card-grid.layout-capsule .article-card:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Voice, Waves, Stars: 1 feature on top + 2 in middle + 1 on bottom */
+  .strategy-card-grid.layout-voice,
+  .strategy-card-grid.layout-waves,
+  .strategy-card-grid.layout-stars {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 110px 136px 136px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+  .strategy-card-grid.layout-voice .article-card:nth-child(1),
+  .strategy-card-grid.layout-waves .article-card:nth-child(1),
+  .strategy-card-grid.layout-stars .article-card:nth-child(1) {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 110px !important;
+  }
+  .strategy-card-grid.layout-voice .article-card:nth-child(2),
+  .strategy-card-grid.layout-waves .article-card:nth-child(2),
+  .strategy-card-grid.layout-stars .article-card:nth-child(2) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    height: 136px !important;
+  }
+  .strategy-card-grid.layout-voice .article-card:nth-child(3),
+  .strategy-card-grid.layout-waves .article-card:nth-child(3),
+  .strategy-card-grid.layout-stars .article-card:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    height: 136px !important;
+  }
+  .strategy-card-grid.layout-voice .article-card:nth-child(4),
+  .strategy-card-grid.layout-waves .article-card:nth-child(4),
+  .strategy-card-grid.layout-stars .article-card:nth-child(4) {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: 100% !important;
+    height: 136px !important;
+  }
+
+  /* 4. Article 3D Flip Card Styles */
+  .article-card {
+    position: relative !important;
+    min-height: 0 !important;
+    perspective: 1400px !important;
+    -webkit-perspective: 1400px !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+
+  .article-card-inner {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    transition: transform 0.65s cubic-bezier(0.2, 0.75, 0.2, 1) !important;
+    transform-style: preserve-3d !important;
+  }
+
+  .article-card.flipped .article-card-inner {
+    transform: rotateY(180deg) !important;
+  }
+
+  [dir="rtl"] .article-card.flipped .article-card-inner {
+    transform: rotateY(-180deg) !important;
+  }
+
+  .article-card-face {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: hidden !important;
+    border-radius: 12px !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+    box-sizing: border-box !important;
+  }
+
+  .article-card-front {
+    display: flex !important;
+    align-items: flex-end !important;
+    padding: 10px !important;
+    background-image: linear-gradient(to top, rgba(3, 14, 33, 0.94), rgba(3, 14, 33, 0.18) 72%), var(--article-image) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    color: #fff !important;
+  }
+
+  .article-card-front::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: inherit !important;
+    pointer-events: none !important;
+  }
+
+  .article-front-copy {
+    position: relative !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .article-eyebrow {
+    display: inline-block !important;
+    align-self: flex-start !important;
+    margin-bottom: 3px !important;
+    padding: 2px 6px !important;
+    border-radius: 5px !important;
+    background: var(--card-accent, #ffd166) !important;
+    color: #11233d !important;
+    font-size: 0.48rem !important;
+    font-weight: 900 !important;
     white-space: nowrap !important;
+    max-width: 100% !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
 
-  .mag-slide-item-title {
-    font-size: 11.5px !important;
-    font-weight: 700 !important;
-    color: #f1f5f9 !important;
-    line-height: 1.3 !important;
+  .article-card h4 {
     margin: 0 !important;
+    font-size: 0.61rem !important;
+    line-height: 1.25 !important;
+    font-weight: 800 !important;
+    color: #fff !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
   }
 
-  .mag-slide-item-action-btn {
+  .article-card.feature h4 {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  .strategy-card-grid.layout-cover .article-card h4 {
+    font-size: 1.02rem !important;
+    line-height: 1.35 !important;
+    -webkit-line-clamp: 3 !important;
+  }
+
+  .article-detail-btn {
     display: inline-flex !important;
     align-items: center !important;
     gap: 4px !important;
-    padding: 4px 8px !important;
-    border-radius: 7px !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    white-space: nowrap !important;
+    margin-top: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 99px !important;
+    padding: 2px 7px !important;
+    background: rgba(255, 255, 255, 0.13) !important;
+    color: #fff !important;
+    font-size: 0.50rem !important;
+    font-weight: 800 !important;
+    pointer-events: none !important;
+    align-self: flex-start !important;
+  }
+
+  .article-detail-btn::after {
+    content: "↻" !important;
+    font-size: 0.62rem !important;
+  }
+
+  /* BACK FACE */
+  .article-card-back {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    padding: 8px !important;
+    background: linear-gradient(145deg, #fffaf0, #f2e5cd) !important;
+    color: #342c24 !important;
+    transform: rotateY(180deg) !important;
+    overflow: hidden !important;
+  }
+
+  [dir="rtl"] .article-card-back {
+    transform: rotateY(-180deg) !important;
+  }
+
+  .article-card-back::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 3px !important;
+    border: 1px solid rgba(101, 79, 48, 0.2) !important;
+    border-radius: 9px !important;
+    pointer-events: none !important;
+  }
+
+  .article-card-back .article-eyebrow {
+    margin: 0 0 2px !important;
+    font-size: 0.48rem !important;
+    line-height: 1.15 !important;
+    align-self: center !important;
+  }
+
+  .article-card-back h4 {
+    color: #20344e !important;
+    margin: 1px 0 !important;
+    font-size: 0.60rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .article-card.feature .article-card-back h4 {
+    font-size: 0.70rem !important;
+  }
+
+  .strategy-card-grid.layout-cover .article-card-back h4 {
+    font-size: 1.02rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .article-intro {
+    margin: 2px 0 4px !important;
+    color: #665a4b !important;
+    font-size: 0.48rem !important;
+    line-height: 1.25 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 4 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .article-card.feature .article-intro {
+    font-size: 0.55rem !important;
+    -webkit-line-clamp: 4 !important;
+  }
+
+  .strategy-card-grid.layout-cover .article-card-back .article-intro {
+    font-size: 0.70rem !important;
+    line-height: 1.6 !important;
+    -webkit-line-clamp: 9 !important;
+  }
+
+  /* Read / View action button with reduced compact font size */
+  .article-read-link {
+    flex: 0 0 auto !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    background: #173b6e !important;
+    color: #fff !important;
+    font-size: 0.48rem !important;
+    font-weight: 800 !important;
     cursor: pointer !important;
-    border: none !important;
-    flex-shrink: 0 !important;
-    transition: all 0.2s ease !important;
+    line-height: 1.1 !important;
+    transition: background 0.2s ease !important;
   }
 
-  .mag-slide-item-action-btn.article {
-    background: rgba(245, 158, 11, 0.15) !important;
-    color: #fbbf24 !important;
-    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  .article-read-link:hover,
+  .article-read-link:active {
+    background: #0f274a !important;
   }
 
-  .mag-slide-item-action-btn.video {
-    background: rgba(239, 68, 68, 0.18) !important;
-    color: #f87171 !important;
-    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  .strategy-card-grid.layout-cover .article-card-back .article-read-link {
+    padding: 6px 12px !important;
+    font-size: 0.62rem !important;
+  }
+
+  /* Video Badge */
+  .article-type-badge {
+    position: absolute !important;
+    z-index: 2 !important;
+    top: 6px !important;
+    inset-inline-end: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    padding: 2px 5px !important;
+    border: 1px solid rgba(255, 255, 255, 0.36) !important;
+    border-radius: 999px !important;
+    background: rgba(10, 16, 34, 0.72) !important;
+    color: #fff !important;
+    font-size: 0.42rem !important;
+    font-weight: 800 !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  .article-type-badge.video {
+    background: rgba(151, 42, 71, 0.88) !important;
+  }
+
+  .article-card.video-card .article-card-front {
+    background-image: linear-gradient(to top, rgba(26, 7, 24, 0.95), rgba(65, 18, 49, 0.18) 72%), var(--article-image) !important;
+  }
+
+  .article-card.video-card .article-detail-btn::before {
+    content: "▶" !important;
+    margin-inline-end: 3px !important;
+  }
+
+  /* 5. Strategy Slide Dots */
+  .strategy-dots {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 7px !important;
+    margin-top: 10px !important;
+  }
+
+  .strategy-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.28) !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    padding: 0 !important;
+  }
+
+  .strategy-dot.active {
+    width: 22px !important;
+    border-radius: 999px !important;
   }
 }
+
 

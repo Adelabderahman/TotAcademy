@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { ArticleCardData, EditorialSlide, MAG_SECTIONS, ARTICLE_CONTENT, PRACTICE_UI } from '@/lib/magazine-data';
+import { ArticleCardData, EditorialSlide, MAG_SECTIONS } from '@/lib/magazine-data';
 import { MagazineFlipCard } from './MagazineFlipCard';
-import { ChevronLeft, ChevronRight, Layers, Play, BookOpen, Share2 } from 'lucide-react';
 
 interface SectionCardsSliderProps {
   slides?: EditorialSlide[];
@@ -59,6 +58,7 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
 
   const mobileTrackRef = useRef<HTMLDivElement>(null);
   const [activeMobileIdx, setActiveMobileIdx] = useState(0);
+  const [flippedCardKey, setFlippedCardKey] = useState<string | null>(null);
 
   // Sync mobile track scroll position when activeSlideSlug changes from external navigation pills
   useEffect(() => {
@@ -66,9 +66,11 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     const idx = effectiveSlides.findIndex((s) => s.slug === activeSlideSlug);
     if (idx >= 0 && idx !== activeMobileIdx) {
       setActiveMobileIdx(idx);
+      setFlippedCardKey(null);
       if (mobileTrackRef.current) {
         const container = mobileTrackRef.current;
-        const target = container.children[idx] as HTMLElement | undefined;
+        const track = container.firstElementChild as HTMLElement | null;
+        const target = track?.children[idx] as HTMLElement | undefined;
         if (target) {
           container.scrollTo({
             left: isRtl
@@ -81,17 +83,25 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     }
   }, [activeSlideSlug, effectiveSlides, isRtl, activeMobileIdx]);
 
-  // Handle mobile swipe/scroll detection to sync active index and parent pill
+  // Global document click listener: when user clicks outside cards, un-flip all flipped cards
+  useEffect(() => {
+    const handleDocClick = () => {
+      setFlippedCardKey(null);
+    };
+    document.addEventListener('click', handleDocClick);
+    return () => document.removeEventListener('click', handleDocClick);
+  }, []);
+
+  // Handle mobile swipe/scroll detection to sync active index and slide bar
   const handleMobileScroll = useCallback(() => {
     if (!mobileTrackRef.current) return;
     const container = mobileTrackRef.current;
     const scrollLeft = Math.abs(container.scrollLeft);
-    const itemWidth = container.firstElementChild
-      ? (container.firstElementChild as HTMLElement).clientWidth + 12
-      : 300;
+    const itemWidth = container.clientWidth || 320;
     const newIdx = Math.round(scrollLeft / itemWidth);
     if (newIdx >= 0 && newIdx < effectiveSlides.length && newIdx !== activeMobileIdx) {
       setActiveMobileIdx(newIdx);
+      setFlippedCardKey(null);
       if (onSelectSlide && effectiveSlides[newIdx]) {
         onSelectSlide(effectiveSlides[newIdx].slug);
       }
@@ -108,7 +118,8 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
   const scrollToSlide = (idx: number) => {
     if (!mobileTrackRef.current) return;
     const container = mobileTrackRef.current;
-    const target = container.children[idx] as HTMLElement | undefined;
+    const track = container.firstElementChild as HTMLElement | null;
+    const target = track?.children[idx] as HTMLElement | undefined;
     if (target) {
       container.scrollTo({
         left: isRtl
@@ -117,6 +128,7 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
         behavior: 'smooth',
       });
       setActiveMobileIdx(idx);
+      setFlippedCardKey(null);
       if (onSelectSlide && effectiveSlides[idx]) {
         onSelectSlide(effectiveSlides[idx].slug);
       }
@@ -133,7 +145,16 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     scrollToSlide(nextIdx);
   };
 
+  // Card click toggles 3D flip
+  const handleCardClick = (cardKey: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFlippedCardKey((prev) => (prev === cardKey ? null : cardKey));
+  };
+
   if (effectiveSlides.length === 0) return null;
+
+  const currentMobileSlide = effectiveSlides[activeMobileIdx] || effectiveSlides[0];
+  const activeSecMeta = MAG_SECTIONS.find((s) => s.slug === currentMobileSlide.slug);
 
   return (
     <div className="mag-carousel-outer">
@@ -165,218 +186,156 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* MOBILE VIEW: Horizontal swipe track of SLIDE CONTAINERS (حاويات المقالات) */}
+      {/* MOBILE VIEW: Exact replica of reference file (trainer-magazine.html)       */}
       {/* Strictly hidden on desktop via .mag-mobile-only CSS class                 */}
       {/* ========================================================================= */}
       <div className="mag-mobile-only">
-        {/* Navigation Bar without swipe hint text */}
+        {/* 1. Mobile Slide Bar with Index, Title and Nav Arrows */}
         {effectiveSlides.length > 1 && (
-          <div className="mag-slider-mobile-bar" style={{ justifyContent: 'space-between', marginBottom: 10 }}>
-            <span className="mag-slider-counter-badge" style={{ fontSize: '11px' }}>
-              {lang === 'ar'
-                ? `حاوية ${activeMobileIdx + 1} من ${effectiveSlides.length}`
-                : lang === 'fr'
-                ? `Volet ${activeMobileIdx + 1} sur ${effectiveSlides.length}`
-                : `Card ${activeMobileIdx + 1} of ${effectiveSlides.length}`}
-            </span>
+          <div className="strategy-slide-bar">
+            <div className="strategy-slide-title-wrap">
+              <span
+                className="strategy-slide-index"
+                style={{
+                  background: currentMobileSlide.accent || '#ffd166',
+                  color: '#173052',
+                }}
+              >
+                {String(activeMobileIdx + 1).padStart(2, '0')}
+              </span>
+              <h3 className="strategy-slide-title">
+                {activeSecMeta ? activeSecMeta.name[lang] || activeSecMeta.name.ar : currentMobileSlide.slug}
+              </h3>
+            </div>
 
-            <div className="mag-slider-actions">
+            <div className="strategy-controls">
               <button
                 type="button"
-                className="mag-slider-nav-btn"
+                className="strategy-arrow"
                 onClick={isRtl ? handleNext : handlePrev}
                 disabled={isRtl ? activeMobileIdx === effectiveSlides.length - 1 : activeMobileIdx === 0}
                 aria-label="Previous"
               >
-                {isRtl ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+                {isRtl ? '›' : '‹'}
               </button>
-
               <button
                 type="button"
-                className="mag-slider-nav-btn"
+                className="strategy-arrow"
                 onClick={isRtl ? handlePrev : handleNext}
                 disabled={isRtl ? activeMobileIdx === 0 : activeMobileIdx === effectiveSlides.length - 1}
                 aria-label="Next"
               >
-                {isRtl ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+                {isRtl ? '‹' : '›'}
               </button>
             </div>
           </div>
         )}
 
-        {/* Swipeable Slide Containers Track */}
+        {/* 2. Swipeable Slide Containers with Exact Geometric Card Grids */}
         <div
           ref={mobileTrackRef}
-          className="mag-slides-swipe-track"
+          className="strategy-slider"
           dir={isRtl ? 'rtl' : 'ltr'}
         >
-          {effectiveSlides.map((slide, slideIdx) => {
-            const secMeta = MAG_SECTIONS.find((s) => s.slug === slide.slug);
-            const slideTitle = secMeta ? secMeta.name[lang] || secMeta.name.ar : slide.slug;
-            const countLabel =
-              lang === 'ar'
-                ? `${slide.cards.length} مقالات وفيديوهات`
-                : lang === 'fr'
-                ? `${slide.cards.length} contenus`
-                : `${slide.cards.length} items`;
-
-            const topLeadCard = slide.cards[0] || null;
-            const secondaryCards = slide.cards.slice(1);
-
-            return (
-              <div
-                key={slide.slug}
-                id={`mobile-slide-${slide.slug}`}
-                className="mag-slide-container-card"
-              >
-                {/* Container Header Badge */}
-                <div className="mag-slide-container-head">
-                  <span
-                    className="mag-slide-badge-title"
-                    style={{
-                      borderColor: `${slide.accent}44`,
-                      color: slide.accent,
-                      background: `${slide.accent}15`,
-                    }}
-                  >
-                    <Layers size={12} />
-                    <span>{slideTitle}</span>
-                  </span>
-                  <span className="mag-slide-item-count">{countLabel}</span>
-                </div>
-
-                {/* Primary Card: Compact 3D Flip Card */}
-                {topLeadCard && (
-                  <div className="mag-slide-feature-slot">
-                    <MagazineFlipCard
-                      card={topLeadCard}
-                      index={0}
-                      total={slide.cards.length}
-                      lang={lang}
-                      isRtl={isRtl}
-                      t={t}
-                      onOpenArticle={onOpenArticle}
-                      onOpenVideo={onOpenVideo}
-                      onOpenShare={onOpenShare}
-                      onCopyCitation={onCopyCitation}
-                      isCompact
-                    />
-                  </div>
-                )}
-
-                {/* Secondary Items: Varied distributed small articles and videos */}
-                {secondaryCards.length > 0 && (
-                  <div className="mag-slide-items-list">
-                    {secondaryCards.map((card, rIdx) => {
-                      const isVideoCard = card.contentType === 'video' && Boolean(card.video);
-                      const title = card.title[lang] || card.title.ar;
-                      const subtitle = isVideoCard
-                        ? (card.video?.speaker[lang] || card.video?.speaker.ar || (lang === 'ar' ? 'خبير ومحاضر' : 'Keynote Speaker'))
-                        : (card.eyebrow[lang] || card.eyebrow.ar);
-                      const badgeText = isVideoCard
-                        ? (card.video?.duration[lang] || card.video?.duration.ar || (lang === 'ar' ? 'فيديو' : 'Video'))
-                        : (ARTICLE_CONTENT[lang]?.readTime || (lang === 'ar' ? '5 د قراءة' : '5 min read'));
+          <div className="strategy-track">
+            {effectiveSlides.map((slide) => {
+              return (
+                <div
+                  key={slide.slug}
+                  className="strategy-slide"
+                  data-strategy-slide={slide.slug}
+                >
+                  <div className={`strategy-card-grid layout-${slide.layout}`}>
+                    {slide.cards.map((card, cardIdx) => {
+                      const cardKey = `${slide.slug}-${cardIdx}`;
+                      const isFlipped = flippedCardKey === cardKey;
+                      const isFeature = card.kind === 'feature';
+                      const isVideo = Boolean(card.video);
 
                       return (
-                        <div
-                          key={`${card.title.en || card.title.ar}-${rIdx}`}
-                          className="mag-slide-item-row"
-                          onClick={() => {
-                            if (isVideoCard && card.video) {
-                              onOpenVideo({
-                                url: card.video.url,
-                                title: title,
-                                speaker: card.video.speaker[lang] || card.video.speaker.ar,
-                                duration: card.video.duration[lang] || card.video.duration.ar,
-                              });
-                            } else {
-                              onOpenArticle(card);
-                            }
+                        <article
+                          key={cardKey}
+                          className={`article-card ${isFeature ? 'feature' : ''} ${isVideo ? 'video-card' : ''} ${isFlipped ? 'flipped' : ''}`}
+                          onClick={(e) => handleCardClick(cardKey, e)}
+                          style={{
+                            ['--article-image' as any]: `url('${card.image}')`,
+                            ['--card-accent' as any]: slide.accent || '#ffd166',
                           }}
                         >
-                          <div className="mag-slide-item-thumb-wrap">
-                            <img
-                              src={card.image}
-                              alt={title}
-                              className="mag-slide-item-thumb"
-                              loading="lazy"
-                            />
-                            {isVideoCard && (
-                              <span className="mag-slide-item-play-overlay">
-                                <Play size={11} fill="#fff" color="#fff" />
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="mag-slide-item-info">
-                            <div className="mag-slide-item-meta">
-                              <span className={`mag-slide-item-tag ${isVideoCard ? 'video' : 'article'}`}>
-                                {isVideoCard ? (
-                                  <Play size={8.5} fill="currentColor" />
-                                ) : (
-                                  <BookOpen size={8.5} />
-                                )}
-                                <span>{badgeText}</span>
-                              </span>
-                              <span className="mag-slide-item-sub">{subtitle}</span>
+                          <div className="article-card-inner">
+                            {/* FRONT FACE */}
+                            <div className="article-card-face article-card-front">
+                              {isVideo && (
+                                <span className="article-type-badge video">
+                                  ▶ {lang === 'ar' ? 'فيديو' : lang === 'fr' ? 'Vidéo' : 'Video'}
+                                </span>
+                              )}
+                              <div className="article-front-copy">
+                                <span className="article-eyebrow">
+                                  {card.eyebrow[lang] || card.eyebrow.ar}
+                                </span>
+                                <h4>{card.title[lang] || card.title.ar}</h4>
+                                <span className="article-detail-btn">
+                                  {t.article_details || 'التفاصيل'}
+                                </span>
+                              </div>
                             </div>
 
-                            <h4 className="mag-slide-item-title">{title}</h4>
+                            {/* BACK FACE */}
+                            <div className="article-card-face article-card-back">
+                              <span className="article-eyebrow">
+                                {card.eyebrow[lang] || card.eyebrow.ar}
+                              </span>
+                              <h4>{card.title[lang] || card.title.ar}</h4>
+                              <p className="article-intro">
+                                {card.intro[lang] || card.intro.ar}
+                              </p>
+                              <button
+                                className="article-read-link"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (card.video) {
+                                    onOpenVideo({
+                                      url: card.video.url,
+                                      title: card.title[lang] || card.title.ar,
+                                      speaker: card.video.speaker[lang] || card.video.speaker.ar,
+                                      duration: card.video.duration[lang] || card.video.duration.ar,
+                                    });
+                                  } else {
+                                    onOpenArticle(card);
+                                  }
+                                }}
+                              >
+                                {isVideo
+                                  ? (lang === 'ar' ? 'شاهد الفيديو' : lang === 'fr' ? 'Voir la vidéo' : 'Watch video')
+                                  : (t.article_read || 'اطلع على المقال')}
+                              </button>
+                            </div>
                           </div>
-
-                          <button
-                            type="button"
-                            className={`mag-slide-item-action-btn ${isVideoCard ? 'video' : 'article'}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isVideoCard && card.video) {
-                                onOpenVideo({
-                                  url: card.video.url,
-                                  title: title,
-                                  speaker: card.video.speaker[lang] || card.video.speaker.ar,
-                                  duration: card.video.duration[lang] || card.video.duration.ar,
-                                });
-                              } else {
-                                onOpenArticle(card);
-                              }
-                            }}
-                          >
-                            {isVideoCard ? (
-                              <>
-                                <Play size={10.5} fill="currentColor" />
-                                <span>{PRACTICE_UI[lang]?.watch || (lang === 'ar' ? 'مشاهدة' : 'Watch')}</span>
-                              </>
-                            ) : (
-                              <>
-                                <BookOpen size={10.5} />
-                                <span>{t.article_read || (lang === 'ar' ? 'قراءة' : 'Read')}</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
+                        </article>
                       );
                     })}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Slide Pagination Dots */}
+        {/* 3. Slide Dots */}
         {effectiveSlides.length > 1 && (
-          <div className="mag-slider-dots-container" style={{ marginTop: '10px' }}>
-            <div className="mag-slider-dots">
-              {effectiveSlides.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className={`mag-slider-dot ${activeMobileIdx === idx ? 'active' : ''}`}
-                  onClick={() => scrollToSlide(idx)}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
+          <div className="strategy-dots">
+            {effectiveSlides.map((s, idx) => (
+              <button
+                key={s.slug}
+                type="button"
+                className={`strategy-dot ${activeMobileIdx === idx ? 'active' : ''}`}
+                style={activeMobileIdx === idx ? { background: s.accent || '#ffd166' } : undefined}
+                onClick={() => scrollToSlide(idx)}
+                aria-label={`Slide ${idx + 1}`}
+              />
+            ))}
           </div>
         )}
       </div>
