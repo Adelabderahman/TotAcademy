@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ArticleCardData, EditorialSlide, MAG_SECTIONS } from '@/lib/magazine-data';
 import { MagazineFlipCard } from './MagazineFlipCard';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SectionCardsSliderProps {
   slides?: EditorialSlide[];
@@ -59,29 +60,44 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
   const mobileTrackRef = useRef<HTMLDivElement>(null);
   const [activeMobileIdx, setActiveMobileIdx] = useState(0);
   const [flippedCardKey, setFlippedCardKey] = useState<string | null>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToSlide = useCallback((idx: number) => {
+    if (!mobileTrackRef.current) return;
+    const container = mobileTrackRef.current;
+    const track = container.firstElementChild as HTMLElement | null;
+    const target = track?.children[idx] as HTMLElement | undefined;
+    if (container && target) {
+      isProgrammaticScrollRef.current = true;
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const deltaX = targetRect.left - containerRect.left;
+      
+      container.scrollBy({
+        left: deltaX,
+        behavior: 'smooth',
+      });
+      setActiveMobileIdx(idx);
+      setFlippedCardKey(null);
+      if (onSelectSlide && effectiveSlides[idx]) {
+        onSelectSlide(effectiveSlides[idx].slug);
+      }
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 500);
+    }
+  }, [effectiveSlides, onSelectSlide]);
 
   // Sync mobile track scroll position when activeSlideSlug changes from external navigation pills
   useEffect(() => {
     if (!activeSlideSlug) return;
     const idx = effectiveSlides.findIndex((s) => s.slug === activeSlideSlug);
     if (idx >= 0 && idx !== activeMobileIdx) {
-      setActiveMobileIdx(idx);
-      setFlippedCardKey(null);
-      if (mobileTrackRef.current) {
-        const container = mobileTrackRef.current;
-        const track = container.firstElementChild as HTMLElement | null;
-        const target = track?.children[idx] as HTMLElement | undefined;
-        if (target) {
-          container.scrollTo({
-            left: isRtl
-              ? target.offsetLeft - (container.clientWidth - target.clientWidth)
-              : target.offsetLeft,
-            behavior: 'smooth',
-          });
-        }
-      }
+      scrollToSlide(idx);
     }
-  }, [activeSlideSlug, effectiveSlides, isRtl, activeMobileIdx]);
+  }, [activeSlideSlug, effectiveSlides, activeMobileIdx, scrollToSlide]);
 
   // Global document click listener: when user clicks outside cards, un-flip all flipped cards
   useEffect(() => {
@@ -92,18 +108,36 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     return () => document.removeEventListener('click', handleDocClick);
   }, []);
 
-  // Handle mobile swipe/scroll detection to sync active index and slide bar
+  // Handle mobile swipe/scroll detection to sync active index and slide bar via physical center distance
   const handleMobileScroll = useCallback(() => {
+    if (isProgrammaticScrollRef.current) return;
     if (!mobileTrackRef.current) return;
     const container = mobileTrackRef.current;
-    const scrollLeft = Math.abs(container.scrollLeft);
-    const itemWidth = container.clientWidth || 320;
-    const newIdx = Math.round(scrollLeft / itemWidth);
-    if (newIdx >= 0 && newIdx < effectiveSlides.length && newIdx !== activeMobileIdx) {
-      setActiveMobileIdx(newIdx);
+    const track = container.firstElementChild as HTMLElement | null;
+    if (!track || track.children.length === 0) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = (containerRect.left + containerRect.right) / 2;
+
+    let closestIdx = activeMobileIdx;
+    let minDiff = Infinity;
+
+    for (let i = 0; i < track.children.length; i++) {
+      const child = track.children[i] as HTMLElement;
+      const childRect = child.getBoundingClientRect();
+      const childCenter = (childRect.left + childRect.right) / 2;
+      const diff = Math.abs(childCenter - containerCenter);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = i;
+      }
+    }
+
+    if (closestIdx !== activeMobileIdx && closestIdx >= 0 && closestIdx < effectiveSlides.length) {
+      setActiveMobileIdx(closestIdx);
       setFlippedCardKey(null);
-      if (onSelectSlide && effectiveSlides[newIdx]) {
-        onSelectSlide(effectiveSlides[newIdx].slug);
+      if (onSelectSlide && effectiveSlides[closestIdx]) {
+        onSelectSlide(effectiveSlides[closestIdx].slug);
       }
     }
   }, [effectiveSlides, activeMobileIdx, onSelectSlide]);
@@ -112,28 +146,11 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     const track = mobileTrackRef.current;
     if (!track) return;
     track.addEventListener('scroll', handleMobileScroll, { passive: true });
-    return () => track.removeEventListener('scroll', handleMobileScroll);
+    return () => {
+      track.removeEventListener('scroll', handleMobileScroll);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
   }, [handleMobileScroll]);
-
-  const scrollToSlide = (idx: number) => {
-    if (!mobileTrackRef.current) return;
-    const container = mobileTrackRef.current;
-    const track = container.firstElementChild as HTMLElement | null;
-    const target = track?.children[idx] as HTMLElement | undefined;
-    if (target) {
-      container.scrollTo({
-        left: isRtl
-          ? target.offsetLeft - (container.clientWidth - target.clientWidth)
-          : target.offsetLeft,
-        behavior: 'smooth',
-      });
-      setActiveMobileIdx(idx);
-      setFlippedCardKey(null);
-      if (onSelectSlide && effectiveSlides[idx]) {
-        onSelectSlide(effectiveSlides[idx].slug);
-      }
-    }
-  };
 
   const handlePrev = () => {
     const nextIdx = Math.max(0, activeMobileIdx - 1);
@@ -216,7 +233,7 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                 disabled={isRtl ? activeMobileIdx === effectiveSlides.length - 1 : activeMobileIdx === 0}
                 aria-label="Previous"
               >
-                {isRtl ? '›' : '‹'}
+                {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
               <button
                 type="button"
@@ -225,7 +242,7 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                 disabled={isRtl ? activeMobileIdx === 0 : activeMobileIdx === effectiveSlides.length - 1}
                 aria-label="Next"
               >
-                {isRtl ? '‹' : '›'}
+                {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
               </button>
             </div>
           </div>
