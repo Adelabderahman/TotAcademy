@@ -55,13 +55,16 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
 
   // Active slide calculation for desktop
   const activeIdx = effectiveSlides.findIndex((s) => s.slug === activeSlideSlug);
-  const currentSlide = effectiveSlides[activeIdx >= 0 ? activeIdx : 0] || effectiveSlides[0];
+  const currentDesktopIdx = activeIdx >= 0 ? activeIdx : 0;
+  const currentDesktopSlide = effectiveSlides[currentDesktopIdx] || effectiveSlides[0];
+  const desktopSecMeta = MAG_SECTIONS.find((s) => s.slug === currentDesktopSlide.slug);
 
   const mobileTrackRef = useRef<HTMLDivElement>(null);
   const [activeMobileIdx, setActiveMobileIdx] = useState(0);
   const [flippedCardKey, setFlippedCardKey] = useState<string | null>(null);
   const isProgrammaticScrollRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const scrollToSlide = useCallback((idx: number) => {
     if (!mobileTrackRef.current) return;
@@ -152,6 +155,7 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     };
   }, [handleMobileScroll]);
 
+  // Mobile navigation arrows
   const handlePrev = () => {
     const nextIdx = Math.max(0, activeMobileIdx - 1);
     scrollToSlide(nextIdx);
@@ -162,10 +166,49 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     scrollToSlide(nextIdx);
   };
 
+  // Desktop navigation arrows
+  const handleDesktopPrev = () => {
+    const nextIdx = Math.max(0, currentDesktopIdx - 1);
+    if (onSelectSlide && effectiveSlides[nextIdx]) {
+      onSelectSlide(effectiveSlides[nextIdx].slug);
+    }
+  };
+
+  const handleDesktopNext = () => {
+    const nextIdx = Math.min(effectiveSlides.length - 1, currentDesktopIdx + 1);
+    if (onSelectSlide && effectiveSlides[nextIdx]) {
+      onSelectSlide(effectiveSlides[nextIdx].slug);
+    }
+  };
+
   // Card click toggles 3D flip
   const handleCardClick = (cardKey: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setFlippedCardKey((prev) => (prev === cardKey ? null : cardKey));
+  };
+
+  // Card touch handler to avoid flipping when dragging/swiping
+  const handleCardTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      touchStartPosRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+    }
+  };
+
+  const handleCardTouchEnd = (cardKey: string, e: React.TouchEvent) => {
+    if (!touchStartPosRef.current) return;
+    if (e.changedTouches.length > 0) {
+      const dx = Math.abs(e.changedTouches[0].clientX - touchStartPosRef.current.x);
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartPosRef.current.y);
+      // If movement is very small (< 8px), treat as clean tap to flip
+      if (dx < 8 && dy < 8) {
+        e.stopPropagation();
+        setFlippedCardKey((prev) => (prev === cardKey ? null : cardKey));
+      }
+    }
+    touchStartPosRef.current = null;
   };
 
   if (effectiveSlides.length === 0) return null;
@@ -180,16 +223,60 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
       {/* Strictly hidden on mobile via .mag-desktop-only CSS class                 */}
       {/* ========================================================================= */}
       <div className="mag-desktop-only">
+        {/* Desktop Slide Header Bar with Index, Title, Counter and Nav Arrows */}
+        {effectiveSlides.length > 1 && (
+          <div className="mag-desktop-slide-bar">
+            <div className="mag-desktop-slide-title-wrap">
+              <span
+                className="mag-desktop-slide-index"
+                style={{
+                  background: currentDesktopSlide.accent || '#ffd166',
+                  color: '#173052',
+                }}
+              >
+                {String(currentDesktopIdx + 1).padStart(2, '0')}
+              </span>
+              <h3 className="mag-desktop-slide-title">
+                {desktopSecMeta ? desktopSecMeta.name[lang] || desktopSecMeta.name.ar : currentDesktopSlide.slug}
+              </h3>
+              <span className="mag-desktop-counter-badge">
+                {String(currentDesktopIdx + 1).padStart(2, '0')} / {String(effectiveSlides.length).padStart(2, '0')}
+              </span>
+            </div>
+
+            <div className="mag-desktop-controls">
+              <button
+                type="button"
+                className="mag-desktop-arrow"
+                onClick={isRtl ? handleDesktopNext : handleDesktopPrev}
+                disabled={isRtl ? currentDesktopIdx === effectiveSlides.length - 1 : currentDesktopIdx === 0}
+                aria-label="Previous Slide"
+              >
+                {isRtl ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              </button>
+              <button
+                type="button"
+                className="mag-desktop-arrow"
+                onClick={isRtl ? handleDesktopPrev : handleDesktopNext}
+                disabled={isRtl ? currentDesktopIdx === 0 : currentDesktopIdx === effectiveSlides.length - 1}
+                aria-label="Next Slide"
+              >
+                {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div
-          className={`mag-desktop-slide-grid ${currentSlide.layout}-grid`}
+          className={`mag-desktop-slide-grid ${currentDesktopSlide.layout}-grid layout-${currentDesktopSlide.layout}`}
           dir={isRtl ? 'rtl' : 'ltr'}
         >
-          {currentSlide.cards.map((card, idx) => (
+          {currentDesktopSlide.cards.map((card, idx) => (
             <MagazineFlipCard
               key={`${card.title.en || card.title.ar}-${idx}`}
               card={card}
               index={idx}
-              total={currentSlide.cards.length}
+              total={currentDesktopSlide.cards.length}
               lang={lang}
               isRtl={isRtl}
               t={t}
@@ -200,6 +287,22 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
             />
           ))}
         </div>
+
+        {/* Desktop Slide Indicator Dots */}
+        {effectiveSlides.length > 1 && (
+          <div className="mag-desktop-dots">
+            {effectiveSlides.map((s, idx) => (
+              <button
+                key={s.slug}
+                type="button"
+                className={`mag-desktop-dot ${currentDesktopIdx === idx ? 'active' : ''}`}
+                style={currentDesktopIdx === idx ? { background: s.accent || '#ffd166' } : undefined}
+                onClick={() => onSelectSlide && onSelectSlide(s.slug)}
+                aria-label={`Slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -274,6 +377,8 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                           key={cardKey}
                           className={`article-card ${isFeature ? 'feature' : ''} ${isVideo ? 'video-card' : ''} ${isFlipped ? 'flipped' : ''}`}
                           onClick={(e) => handleCardClick(cardKey, e)}
+                          onTouchStart={handleCardTouchStart}
+                          onTouchEnd={(e) => handleCardTouchEnd(cardKey, e)}
                           style={{
                             ['--article-image' as any]: `url('${card.image}')`,
                             ['--card-accent' as any]: slide.accent || '#ffd166',
@@ -292,14 +397,35 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                                   {card.eyebrow[lang] || card.eyebrow.ar}
                                 </span>
                                 <h4>{card.title[lang] || card.title.ar}</h4>
-                                <span className="article-detail-btn">
+                                <button
+                                  type="button"
+                                  className="article-detail-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCardClick(cardKey, e);
+                                  }}
+                                >
                                   {t.article_details || 'التفاصيل'}
-                                </span>
+                                </button>
                               </div>
                             </div>
 
                             {/* BACK FACE */}
                             <div className="article-card-face article-card-back">
+                              {/* Close / Flip Back Button */}
+                              <button
+                                type="button"
+                                className="article-flip-back-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFlippedCardKey(null);
+                                }}
+                                aria-label="Back"
+                                title={lang === 'ar' ? 'العودة' : 'Back'}
+                              >
+                                ↻
+                              </button>
+
                               <span className="article-eyebrow">
                                 {card.eyebrow[lang] || card.eyebrow.ar}
                               </span>
@@ -311,6 +437,21 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                                 className="article-read-link"
                                 type="button"
                                 onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (card.video) {
+                                    onOpenVideo({
+                                      url: card.video.url,
+                                      title: card.title[lang] || card.title.ar,
+                                      speaker: card.video.speaker[lang] || card.video.speaker.ar,
+                                      duration: card.video.duration[lang] || card.video.duration.ar,
+                                    });
+                                  } else {
+                                    onOpenArticle(card);
+                                  }
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
                                   if (card.video) {
                                     onOpenVideo({
