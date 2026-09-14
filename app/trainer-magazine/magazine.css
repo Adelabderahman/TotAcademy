@@ -2785,26 +2785,57 @@
     -webkit-line-clamp: 3 !important;
   }
 
-  .article-detail-btn {
+  .article-front-actions {
     display: inline-flex !important;
     align-items: center !important;
     gap: 4px !important;
     margin-top: 4px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .article-read-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-radius: 99px !important;
+    padding: 2px 7px !important;
+    background: #173b6e !important;
+    color: #ffffff !important;
+    font-size: 0.48rem !important;
+    font-weight: 800 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35) !important;
+    transition: background 0.2s ease !important;
+    line-height: 1.15 !important;
+  }
+
+  .article-read-btn:hover,
+  .article-read-btn:active {
+    background: #0f274a !important;
+  }
+
+  .article-detail-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     border-radius: 99px !important;
     padding: 2px 7px !important;
-    background: rgba(255, 255, 255, 0.13) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
     color: #fff !important;
     font-size: 0.48rem !important;
     font-weight: 800 !important;
     pointer-events: auto !important;
     cursor: pointer !important;
     align-self: flex-start !important;
+    line-height: 1.15 !important;
   }
 
   .article-detail-btn::after {
     content: "↻" !important;
-    font-size: 0.62rem !important;
+    font-size: 0.60rem !important;
   }
 
   /* BACK FACE */
@@ -2815,7 +2846,7 @@
     align-items: center !important;
     text-align: center !important;
     gap: 2px !important;
-    padding: 7px 6px !important;
+    padding: 6px 5px !important;
     background: linear-gradient(145deg, #fffaf0, #f2e5cd) !important;
     color: #342c24 !important;
     transform: rotateY(180deg) !important;
@@ -2829,17 +2860,15 @@
     transform: rotateY(-180deg) !important;
   }
 
-  /* FLIPPED STATE: Swap stacking and pointer events */
+  /* FLIPPED STATE: Swap stacking and pointer events without killing 3D rotation transition */
   .article-card.flipped .article-card-front {
     z-index: 1 !important;
     pointer-events: none !important;
-    visibility: hidden !important;
   }
 
   .article-card.flipped .article-card-back {
     z-index: 10 !important;
     pointer-events: auto !important;
-    visibility: visible !important;
   }
 
   /* Flip Back Button */
@@ -2897,19 +2926,20 @@
   }
 
   .article-intro {
-    margin: 1px 0 3px !important;
+    margin: 1px 0 2px !important;
     color: #665a4b !important;
-    font-size: clamp(0.46rem, 2vw, 0.52rem) !important;
-    line-height: 1.25 !important;
+    font-size: clamp(0.44rem, 1.9vw, 0.50rem) !important;
+    line-height: 1.2 !important;
     display: -webkit-box !important;
-    -webkit-line-clamp: 3 !important;
+    -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
+    flex: 1 1 auto !important;
   }
 
   .article-card.feature .article-intro {
     font-size: 0.55rem !important;
-    -webkit-line-clamp: 4 !important;
+    -webkit-line-clamp: 3 !important;
   }
 
   .strategy-card-grid.layout-cover .article-card-back .article-intro {
@@ -2921,26 +2951,33 @@
   /* Read / View action button with reduced compact font size */
   .article-read-link {
     flex: 0 0 auto !important;
-    margin: 2px auto 0 !important;
+    margin: 2px auto 1px !important;
     border: 0 !important;
-    border-radius: 6px !important;
-    padding: 3px 8px !important;
+    border-radius: 99px !important;
+    padding: 3px 9px !important;
     background: #173b6e !important;
-    color: #fff !important;
-    font-size: 0.48rem !important;
+    color: #ffffff !important;
+    font-size: 0.50rem !important;
     font-weight: 800 !important;
     cursor: pointer !important;
-    line-height: 1.15 !important;
-    transition: background 0.2s ease !important;
+    line-height: 1.2 !important;
+    transition: all 0.2s ease !important;
     position: relative !important;
     z-index: 25 !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
+    box-shadow: 0 2px 6px rgba(23, 59, 110, 0.35) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
   }
 
   .article-read-link:hover,
   .article-read-link:active {
     background: #0f274a !important;
+    transform: scale(1.03) !important;
   }
 
   .strategy-card-grid.layout-cover .article-card-back .article-read-link {

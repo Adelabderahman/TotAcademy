@@ -64,7 +64,8 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
   const [flippedCardKey, setFlippedCardKey] = useState<string | null>(null);
   const isProgrammaticScrollRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const lastTouchTimeRef = useRef<number>(0);
 
   const scrollToSlide = useCallback((idx: number) => {
     if (!mobileTrackRef.current) return;
@@ -181,10 +182,17 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     }
   };
 
-  // Card click toggles 3D flip
+  const toggleFlipCard = (cardKey: string) => {
+    setFlippedCardKey((prev) => (prev === cardKey ? null : cardKey));
+  };
+
+  // Card click toggles 3D flip (filters synthetic touch clicks)
   const handleCardClick = (cardKey: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setFlippedCardKey((prev) => (prev === cardKey ? null : cardKey));
+    if (Date.now() - lastTouchTimeRef.current < 500) {
+      return;
+    }
+    toggleFlipCard(cardKey);
   };
 
   // Card touch handler to avoid flipping when dragging/swiping
@@ -193,6 +201,7 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
       touchStartPosRef.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
+        time: Date.now(),
       };
     }
   };
@@ -202,13 +211,28 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
     if (e.changedTouches.length > 0) {
       const dx = Math.abs(e.changedTouches[0].clientX - touchStartPosRef.current.x);
       const dy = Math.abs(e.changedTouches[0].clientY - touchStartPosRef.current.y);
-      // If movement is very small (< 8px), treat as clean tap to flip
-      if (dx < 8 && dy < 8) {
+      const dt = Date.now() - touchStartPosRef.current.time;
+      // If movement is tiny (< 10px) and brief (< 400ms), treat as clean tap to flip
+      if (dx < 10 && dy < 10 && dt < 400) {
         e.stopPropagation();
-        setFlippedCardKey((prev) => (prev === cardKey ? null : cardKey));
+        lastTouchTimeRef.current = Date.now();
+        toggleFlipCard(cardKey);
       }
     }
     touchStartPosRef.current = null;
+  };
+
+  const handleActionRead = (card: ArticleCardData) => {
+    if (card.video) {
+      onOpenVideo({
+        url: card.video.url,
+        title: card.title[lang] || card.title.ar,
+        speaker: card.video.speaker[lang] || card.video.speaker.ar,
+        duration: card.video.duration[lang] || card.video.duration.ar,
+      });
+    } else {
+      onOpenArticle(card);
+    }
   };
 
   if (effectiveSlides.length === 0) return null;
@@ -397,16 +421,57 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                                   {card.eyebrow[lang] || card.eyebrow.ar}
                                 </span>
                                 <h4>{card.title[lang] || card.title.ar}</h4>
-                                <button
-                                  type="button"
-                                  className="article-detail-btn"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCardClick(cardKey, e);
-                                  }}
-                                >
-                                  {t.article_details || 'التفاصيل'}
-                                </button>
+                                <div className="article-front-actions">
+                                  <button
+                                    type="button"
+                                    className="article-read-btn"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (Date.now() - lastTouchTimeRef.current < 400) return;
+                                      handleActionRead(card);
+                                    }}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      lastTouchTimeRef.current = Date.now();
+                                      handleActionRead(card);
+                                    }}
+                                    aria-label={isVideo ? 'Watch Video' : 'Read Article'}
+                                  >
+                                    {isVideo ? (
+                                      <>
+                                        <span>▶</span>
+                                        <span>{lang === 'ar' ? 'شاهد' : lang === 'fr' ? 'Voir' : 'Watch'}</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>{t.article_read || (lang === 'ar' ? 'اقرأ' : lang === 'fr' ? 'Lire' : 'Read')}</span>
+                                        <span>↗</span>
+                                      </>
+                                    )}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="article-detail-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (Date.now() - lastTouchTimeRef.current < 400) return;
+                                      toggleFlipCard(cardKey);
+                                    }}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => {
+                                      e.stopPropagation();
+                                      lastTouchTimeRef.current = Date.now();
+                                      toggleFlipCard(cardKey);
+                                    }}
+                                    aria-label={t.article_details || 'التفاصيل'}
+                                  >
+                                    {t.article_details || (lang === 'ar' ? 'التفاصيل' : lang === 'fr' ? 'Détails' : 'Details')}
+                                  </button>
+                                </div>
                               </div>
                             </div>
 
@@ -418,7 +483,14 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                                 className="article-flip-back-btn"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setFlippedCardKey(null);
+                                  if (Date.now() - lastTouchTimeRef.current < 400) return;
+                                  toggleFlipCard(cardKey);
+                                }}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchEnd={(e) => {
+                                  e.stopPropagation();
+                                  lastTouchTimeRef.current = Date.now();
+                                  toggleFlipCard(cardKey);
                                 }}
                                 aria-label="Back"
                                 title={lang === 'ar' ? 'العودة' : 'Back'}
@@ -439,35 +511,20 @@ export const SectionCardsSlider: React.FC<SectionCardsSliderProps> = ({
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  if (card.video) {
-                                    onOpenVideo({
-                                      url: card.video.url,
-                                      title: card.title[lang] || card.title.ar,
-                                      speaker: card.video.speaker[lang] || card.video.speaker.ar,
-                                      duration: card.video.duration[lang] || card.video.duration.ar,
-                                    });
-                                  } else {
-                                    onOpenArticle(card);
-                                  }
+                                  if (Date.now() - lastTouchTimeRef.current < 400) return;
+                                  handleActionRead(card);
                                 }}
+                                onTouchStart={(e) => e.stopPropagation()}
                                 onTouchEnd={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  if (card.video) {
-                                    onOpenVideo({
-                                      url: card.video.url,
-                                      title: card.title[lang] || card.title.ar,
-                                      speaker: card.video.speaker[lang] || card.video.speaker.ar,
-                                      duration: card.video.duration[lang] || card.video.duration.ar,
-                                    });
-                                  } else {
-                                    onOpenArticle(card);
-                                  }
+                                  lastTouchTimeRef.current = Date.now();
+                                  handleActionRead(card);
                                 }}
                               >
                                 {isVideo
-                                  ? (lang === 'ar' ? 'شاهد الفيديو' : lang === 'fr' ? 'Voir la vidéo' : 'Watch video')
-                                  : (t.article_read || 'اطلع على المقال')}
+                                  ? (lang === 'ar' ? '▶ شاهد الفيديو' : lang === 'fr' ? '▶ Voir la vidéo' : '▶ Watch video')
+                                  : (t.article_read || (lang === 'ar' ? 'اطلع على المقال كاملًا ↗' : lang === 'fr' ? 'Lire l’article ↗' : 'Read Article ↗'))}
                               </button>
                             </div>
                           </div>
