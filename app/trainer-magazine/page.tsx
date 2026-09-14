@@ -43,7 +43,9 @@ import {
   Info,
   Clock,
   Layers,
+  Compass,
 } from 'lucide-react';
+import { SectionCardsSlider } from '@/components/magazine/SectionCardsSlider';
 import './magazine.css';
 
 export default function TrainerMagazinePage() {
@@ -165,77 +167,6 @@ export default function TrainerMagazinePage() {
   // Open printable PDF view
   const handleOpenPdfView = () => {
     window.print();
-  };
-
-  // Render article card
-  const renderCard = (card: ArticleCardData, index: number, total: number) => {
-    const isFeature = card.kind === 'feature' || (index === 0 && total <= 3);
-    const colClass = isFeature ? 'feature-col' : total >= 4 ? 'col-4' : 'col-6';
-    const isVideo = card.contentType === 'video' && card.video;
-
-    return (
-      <article
-        key={`${card.title.en}-${index}`}
-        className={`mag-card ${colClass}`}
-        id={`card-${index}`}
-      >
-        <div className="mag-card-img-wrap">
-          <img
-            src={card.image}
-            alt={card.title[lang] || card.title.ar}
-            className="mag-card-img"
-            loading="lazy"
-          />
-        </div>
-        <div className="mag-card-body">
-          <div className="mag-card-eyebrow">
-            {card.eyebrow[lang] || card.eyebrow.ar}
-          </div>
-          <h3 className="mag-card-title">
-            {card.title[lang] || card.title.ar}
-          </h3>
-          <p className="mag-card-intro">
-            {card.intro[lang] || card.intro.ar}
-          </p>
-          <div className="mag-card-actions">
-            {isVideo ? (
-              <button
-                type="button"
-                className="btn-watch-video"
-                onClick={() =>
-                  setActiveVideo({
-                    url: card.video!.url,
-                    title: card.title[lang] || card.title.ar,
-                    speaker: card.video!.speaker[lang] || card.video!.speaker.ar,
-                    duration: card.video!.duration[lang] || card.video!.duration.ar,
-                  })
-                }
-              >
-                <Play size={14} fill="currentColor" />
-                <span>{PRACTICE_UI[lang].watch}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn-read-story"
-                onClick={() => setActiveArticle(card)}
-              >
-                <BookOpen size={14} />
-                <span>{t.article_read}</span>
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn-card-details"
-              onClick={() => setActiveArticle(card)}
-            >
-              <span>{t.article_details}</span>
-              <ArrowUpRight size={13} />
-            </button>
-          </div>
-        </div>
-      </article>
-    );
   };
 
   return (
@@ -362,13 +293,21 @@ export default function TrainerMagazinePage() {
           </div>
         </div>
 
-        <div className="mag-carousel-outer">
-          <div className={`${strategySlide.layout}-grid`}>
-            {strategySlide.cards.map((card, idx) =>
-              renderCard(card, idx, strategySlide.cards.length)
-            )}
-          </div>
-        </div>
+        <SectionCardsSlider
+          cards={strategySlide.cards}
+          layout={strategySlide.layout}
+          sectionSlug={activeStrategySec}
+          lang={lang}
+          isRtl={isRtl}
+          t={t}
+          onOpenArticle={(card) => setActiveArticle(card)}
+          onOpenVideo={(video) => setActiveVideo(video)}
+          onOpenShare={(card) => {
+            setActiveArticle(card);
+            setIsShareModalOpen(true);
+          }}
+          onCopyCitation={handleCopyApa}
+        />
       </section>
 
       {/* SECTION 2: Field Practice & Professional Development */}
@@ -393,13 +332,21 @@ export default function TrainerMagazinePage() {
           </div>
         </div>
 
-        <div className="mag-carousel-outer">
-          <div className={`${practiceSlide.layout}-grid`}>
-            {practiceSlide.cards.map((card, idx) =>
-              renderCard(card, idx, practiceSlide.cards.length)
-            )}
-          </div>
-        </div>
+        <SectionCardsSlider
+          cards={practiceSlide.cards}
+          layout={practiceSlide.layout}
+          sectionSlug={activePracticeSec}
+          lang={lang}
+          isRtl={isRtl}
+          t={t}
+          onOpenArticle={(card) => setActiveArticle(card)}
+          onOpenVideo={(video) => setActiveVideo(video)}
+          onOpenShare={(card) => {
+            setActiveArticle(card);
+            setIsShareModalOpen(true);
+          }}
+          onCopyCitation={handleCopyApa}
+        />
       </section>
 
       {/* SECTION 3: Innovation, Technology & Business */}
@@ -424,13 +371,21 @@ export default function TrainerMagazinePage() {
           </div>
         </div>
 
-        <div className="mag-carousel-outer">
-          <div className={`${innovationSlide.layout}-grid`}>
-            {innovationSlide.cards.map((card, idx) =>
-              renderCard(card, idx, innovationSlide.cards.length)
-            )}
-          </div>
-        </div>
+        <SectionCardsSlider
+          cards={innovationSlide.cards}
+          layout={innovationSlide.layout}
+          sectionSlug={activeInnovationSec}
+          lang={lang}
+          isRtl={isRtl}
+          t={t}
+          onOpenArticle={(card) => setActiveArticle(card)}
+          onOpenVideo={(video) => setActiveVideo(video)}
+          onOpenShare={(card) => {
+            setActiveArticle(card);
+            setIsShareModalOpen(true);
+          }}
+          onCopyCitation={handleCopyApa}
+        />
       </section>
 
       {/* SECTION 4: Community & Multimedia */}
@@ -455,13 +410,21 @@ export default function TrainerMagazinePage() {
           </div>
         </div>
 
-        <div className="mag-carousel-outer">
-          <div className={`${communitySlide.layout}-grid`}>
-            {communitySlide.cards.map((card, idx) =>
-              renderCard(card, idx, communitySlide.cards.length)
-            )}
-          </div>
-        </div>
+        <SectionCardsSlider
+          cards={communitySlide.cards}
+          layout={communitySlide.layout}
+          sectionSlug={activeCommunitySec}
+          lang={lang}
+          isRtl={isRtl}
+          t={t}
+          onOpenArticle={(card) => setActiveArticle(card)}
+          onOpenVideo={(video) => setActiveVideo(video)}
+          onOpenShare={(card) => {
+            setActiveArticle(card);
+            setIsShareModalOpen(true);
+          }}
+          onCopyCitation={handleCopyApa}
+        />
       </section>
 
       {/* DIGITAL ARCHIVE / ISSUES */}
@@ -470,6 +433,20 @@ export default function TrainerMagazinePage() {
           <div className="issues-kicker">{t.issues_kicker}</div>
           <h2 className="issues-title">{t.issues_title}</h2>
           <p className="issues-desc">{t.issues_desc}</p>
+        </div>
+
+        {/* Mobile Swipe Prompt for Archive */}
+        <div className="mag-slider-mobile-bar" style={{ justifyContent: 'center', marginBottom: 14 }}>
+          <div className="mag-swipe-hint-pill">
+            <Compass size={13} className="text-sky-400 animate-spin-slow" />
+            <span>
+              {lang === 'ar'
+                ? 'اسحب أفقياً لتصفح أعداد المجلة'
+                : lang === 'fr'
+                ? 'Glissez pour feuilleter les numéros'
+                : 'Swipe horizontally to browse magazine issues'}
+            </span>
+          </div>
         </div>
 
         <div className="issues-grid">
